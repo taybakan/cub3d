@@ -6,9 +6,11 @@
 # include "../include/mlx/mlx.h"
 # include <fcntl.h>
 # include <stdio.h>
+# include <math.h>
 
 #  define WIDTH 1024
 #  define HEIGHT 512
+#  define PI 3.1415926535
 
 typedef struct s_map
 {
@@ -48,8 +50,11 @@ typedef struct s_mlx
 	void *n_s_img_ptr;
 	void *path_ptr;
 	void *wall_ptr;
-	int	pl_x;
-	int pl_y;
+	int		pl_x;
+	int 	pl_y;
+	float	pl_dx;
+	float	pl_dy;
+	int		pl_a;
 	char **map;
 } t_mlx;
 

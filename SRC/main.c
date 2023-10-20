@@ -6,25 +6,78 @@
 /*   By: taybakan <taybakan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 19:34:44 by fsoymaz           #+#    #+#             */
-/*   Updated: 2023/10/20 22:02:23 by taybakan         ###   ########.fr       */
+/*   Updated: 2023/10/21 00:13:29 by taybakan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/cub3d.h"
+#include <stdio.h>
+
+void draw_line(void *mlx_ptr, void *win_ptr, int x0, int y0, int x1, int y1)
+{
+	int dx = abs(x1 - x0);
+	int dy = abs(y1 - y0);
+	int sx = (x0 < x1) ? 1 : -1;
+	int sy = (y0 < y1) ? 1 : -1;
+	int err = dx - dy;
+
+	while (1)
+	{
+		mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0xFFFFFF); // Set pixel color (white in this case)
+
+		if (x0 == x1 && y0 == y1)
+		{
+			break;
+		}
+		int e2 = 2 * err;
+		if (e2 > -dy)
+		{
+			err = err - dy;
+			x0 = x0 + sx;
+		}
+		if (e2 < dx)
+		{
+			err = err + dx;
+			y0 = y0 + sy;
+		}
+	}
+}
+
+void	draw_rays(t_mlx *data)
+{
+	for (int i = data->pl_a; i < (data->pl_a + 60); i += 5)
+	{
+		double angle = i * 6.28319 / 360;
+		int line_length = 100;
+		int end_x = data->pl_x + line_length * cos(angle);
+		int end_y = data->pl_y+ line_length * sin(angle);
+
+		draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, end_x, end_y);
+	}
+}
 
 int		mv_player(int key, t_mlx *data)
 {
 	if (key == 13)
-        data->pl_y -= 2;
+        data->pl_y -= 8;
     else if (key == 1)
-        data->pl_y += 2;
+        data->pl_y += 8;
     else if (key == 0)
-    	data->pl_x -= 2;
+    	data->pl_x -= 8;
     else if (key == 2)
-        data->pl_x += 2;
+        data->pl_x += 8;
+	else if (key == 123)
+	{
+		data->pl_a -= 10;
+	}
+	else if (key == 124)
+	{
+		data->pl_a += 10;
+	}
 	mlx_clear_window(data->mlx_ptr, data->win_ptr);
 	put_map(data);
-	mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->pl_ptr, data->pl_x, data->pl_y);
+	mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->pl_ptr, data->pl_x - 2, data->pl_y - 2);
+	draw_rays(data);
 	put_game_bg(data);
 	return 0;
 }
@@ -35,10 +88,11 @@ void	init_player(t_mlx *data)
 	int	j;
 	int *pl_rgb;
 
+	data->pl_a = -120;
 	pl_rgb = calloc(sizeof(int) * 3, 3);
 	pl_rgb[0] = 255;
-	data->pl_ptr = mlx_new_image(data->mlx_ptr, 4, 4);
-	manipulate_image(data->pl_ptr, pl_rgb, 4, 4);
+	data->pl_ptr = mlx_new_image(data->mlx_ptr, 5, 5);
+	manipulate_image(data->pl_ptr, pl_rgb, 5, 5);
 	i = 0;
 	for (int y = 30; y < 512; y += 64)
 	{
@@ -47,7 +101,7 @@ void	init_player(t_mlx *data)
 		{
 			if (data->map[i][j] == 'P')
 			{
-				mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->pl_ptr, x, y);
+				mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->pl_ptr, x - 2, y - 2);
 				data->pl_x = x;
 				data->pl_y = y;
 			}
@@ -55,6 +109,7 @@ void	init_player(t_mlx *data)
 		}
 		i++;
 	}
+	draw_rays(data);
 }
 
 void	put_game_bg(t_mlx *data)
@@ -91,10 +146,10 @@ void	put_map(t_mlx *data)
 	int j;
 	
 	i = 0;
-	for (int y = 2; y < 512; y += 64)
+	for (int y = 1; y < 512; y += 64)
 	{
 		j = 0;
-		for (int x = 2; x < 512; x += 64)
+		for (int x = 1; x < 512; x += 64)
 		{
 			if (data->map[i][j] == '1')
 				mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->wall_ptr, x, y);
@@ -122,8 +177,8 @@ void	init_map(t_mlx *data)
 	path_rgb[0] = 112;
 	path_rgb[1] = 128;
 	path_rgb[2] = 144;
-	manipulate_image(data->wall_ptr, wall_rgb, 60, 60);
-	manipulate_image(data->path_ptr, path_rgb, 60, 60);
+	manipulate_image(data->wall_ptr, wall_rgb, 62, 62);
+	manipulate_image(data->path_ptr, path_rgb, 62, 62);
 	put_map(data);
 }
 
@@ -142,12 +197,20 @@ void	load_map(t_mlx *data)
 	data->map = malloc(sizeof(char *) * 8);
 	data->map[0] = ft_strdup("11111111\0");
 	data->map[1] = ft_strdup("10000001\0");
-	data->map[2] = ft_strdup("10001001\0");
+	data->map[2] = ft_strdup("10011001\0");
 	data->map[3] = ft_strdup("10000001\0");
-	data->map[4] = ft_strdup("11100001\0");
-	data->map[5] = ft_strdup("10000P01\0");
-	data->map[6] = ft_strdup("10000001\0");
+	data->map[4] = ft_strdup("11100101\0");
+	data->map[5] = ft_strdup("10000001\0");
+	data->map[6] = ft_strdup("1P000001\0");
 	data->map[7] = ft_strdup("11111111\0");
+}
+
+int	ft_exit(void *a)
+{
+	(void)a;
+
+	exit(0);
+	return (0);
 }
 
 int	main(void)
@@ -158,6 +221,7 @@ int	main(void)
 	load_map(data);
 	init_window(data);
 	mlx_hook(data->win_ptr, 2, 1L << 0, &mv_player, data);
+	mlx_hook(data->win_ptr, 17, 0, &ft_exit, NULL);
 	mlx_loop(data->mlx_ptr);
 	return (0);
 }
