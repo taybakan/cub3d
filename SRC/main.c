@@ -6,7 +6,7 @@
 /*   By: taybakan <taybakan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 19:34:44 by fsoymaz           #+#    #+#             */
-/*   Updated: 2023/10/21 00:13:29 by taybakan         ###   ########.fr       */
+/*   Updated: 2023/11/22 17:22:03 by taybakan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void draw_line(void *mlx_ptr, void *win_ptr, int x0, int y0, int x1, int y1)
 
 	while (1)
 	{
-		mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0xFFFFFF); // Set pixel color (white in this case)
+		mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0xFFFFFF);
 
 		if (x0 == x1 && y0 == y1)
 		{
@@ -45,12 +45,15 @@ void draw_line(void *mlx_ptr, void *win_ptr, int x0, int y0, int x1, int y1)
 
 void	draw_rays(t_mlx *data)
 {
-	for (int i = data->pl_a; i < (data->pl_a + 60); i += 5)
+	int end_x;
+	int end_y;
+
+	for (int i = data->pl_a; i < (data->pl_a + 60); i += 2)
 	{
 		double angle = i * 6.28319 / 360;
-		int line_length = 100;
-		int end_x = data->pl_x + line_length * cos(angle);
-		int end_y = data->pl_y+ line_length * sin(angle);
+		int line_length = 500;
+		end_x = data->pl_x + line_length * cos(angle);
+		end_y = data->pl_y + line_length * sin(angle);
 
 		draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, end_x, end_y);
 	}
@@ -59,21 +62,29 @@ void	draw_rays(t_mlx *data)
 int		mv_player(int key, t_mlx *data)
 {
 	if (key == 13)
-        data->pl_y -= 8;
-    else if (key == 1)
-        data->pl_y += 8;
-    else if (key == 0)
-    	data->pl_x -= 8;
-    else if (key == 2)
-        data->pl_x += 8;
-	else if (key == 123)
 	{
-		data->pl_a -= 10;
+        data->pl_y += (int)(sin(((data->pl_a + 30) * (PI / 180))) * 8);
+		data->pl_x += (int)(cos(((data->pl_a + 30) * (PI / 180))) * 8);
 	}
-	else if (key == 124)
+    if (key == 1)
 	{
-		data->pl_a += 10;
+		data->pl_y -= (int)(sin(((data->pl_a + 30) * (PI / 180))) * 8);
+		data->pl_x -= (int)(cos(((data->pl_a + 30) * (PI / 180))) * 8);
 	}
+	if (key == 0)
+	{
+		data->pl_y += (int)(sin(((data->pl_a - 60) * (PI / 180))) * 8);
+		data->pl_x += (int)(cos(((data->pl_a - 60) * (PI / 180))) * 8);
+	}
+	if (key == 2)
+	{
+		data->pl_y -= (int)(sin(((data->pl_a - 60) * (PI / 180))) * 8);
+		data->pl_x -= (int)(cos(((data->pl_a - 60) * (PI / 180))) * 8);
+	}
+	if (key == 123)
+		data->pl_a -= 5;
+	if (key == 124)
+		data->pl_a += 5;
 	mlx_clear_window(data->mlx_ptr, data->win_ptr);
 	put_map(data);
 	mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->pl_ptr, data->pl_x - 2, data->pl_y - 2);
