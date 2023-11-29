@@ -12,6 +12,18 @@
 #  define HEIGHT 512
 #  define PI 3.1415926535
 
+typedef struct s_ray
+{
+	int		id;
+	int		hr_x;
+	int		hr_y;
+	double	len_h;
+	int 	vr_x;
+	int 	vr_y;
+	double len_v;
+	double	r_a;
+}			t_ray;
+
 typedef struct s_map
 {
 	char	**map;
@@ -54,8 +66,9 @@ typedef struct s_mlx
 	int 	pl_y;
 	float	pl_dx;
 	float	pl_dy;
-	int		pl_a;
+	float	pl_a;
 	char **map;
+	t_ray	*ray;
 } t_mlx;
 
 char		*ft_ret(char *str);
