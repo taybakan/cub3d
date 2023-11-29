@@ -6,7 +6,7 @@
 /*   By: taybakan <taybakan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 19:34:44 by fsoymaz           #+#    #+#             */
-/*   Updated: 2023/11/29 22:06:08 by taybakan         ###   ########.fr       */
+/*   Updated: 2023/11/30 00:14:02 by taybakan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = (-tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = 1 / (cos(r_a) / (data->pl_y - ray->hr_y));
+		ray->len_h = fabs(1 / (cos(r_a) / (data->pl_y - ray->hr_y)));
 		printf("len:%f\n", ray->len_h);
 	}
 	if (ray->r_a > PI / 2 && ray->r_a <= PI)
@@ -119,7 +119,7 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = -(tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = 1 / (cos(r_a) / (data->pl_y - ray->hr_y));
+		ray->len_h = fabs(1 / (cos(r_a) / (data->pl_y - ray->hr_y)));
 		printf("len:%f\n", ray->len_h);
 	}
 	if (ray->r_a >= PI && ray->r_a <= (PI / 2) * 3)
@@ -133,7 +133,7 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = -(-tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = -1 / (cos(r_a) / (data->pl_y % 64));
+		ray->len_h = fabs(-1 / (cos(r_a) / (data->pl_y % 64)));
 		printf("len:%f\n", ray->len_h);
 	}
 	if (ray->r_a > (PI / 2) * 3)
@@ -147,91 +147,104 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = (tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = -1 / (cos(r_a) / (data->pl_y % 64));
+		ray->len_h = fabs(-1 / (cos(r_a) / (data->pl_y % 64)));
 		printf("len:%f\n", ray->len_h);
 	}
-	if (ray->id == 1 || ray->id == 30)
-		draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->hr_x, ray->hr_y, 2);
-	else if (ray->id == 15 || ray->id == 16)
-		draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->hr_x, ray->hr_y, 3);
-	else
-		draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->hr_x, ray->hr_y, 1);
+	//if (ray->id == 1 || ray->id == 30)
+	//	draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->hr_x, ray->hr_y, 2);
+	//else if (ray->id == 15 || ray->id == 16)
+	//	draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->hr_x, ray->hr_y, 3);
+	//else
+	//	draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->hr_x, ray->hr_y, 1);
 }
 
 void vrt_rays(t_mlx *data, t_ray *ray)
 {
 	double r_a = ray->r_a;
 	int m_x = data->pl_x % 64;
-	if (ray->r_a == PI / 2 || ray->r_a == 3 * PI / 2)
-		return;
+	if ((ray->r_a <= (PI / 2) + 0.25 && ray->r_a >= (PI / 2) - 0.25) || (ray->r_a == 3 * PI / 2))
+	{
+		ray->len_v = 9999;
+		return ;
+	}
 	if (ray->r_a < PI / 2)
 	{
 		m_x = 64 - m_x;
 		ray->vr_x = ((data->pl_x / 64) * 64) + 64;
 		ray->vr_y = -(tan(r_a) * m_x) + data->pl_y;
 		printf("%d\n%d\n", (ray->vr_y / 64), (ray->vr_x / 64));
-		while (abs(ray->vr_y / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == 'P'))
+		while (abs(ray->vr_y / 64) < 8 && abs(ray->vr_x / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == 'P'))
 		{
 			ray->vr_x += 64;
 			m_x += 64;
 			ray->vr_y = -(tan(r_a) * m_x) + data->pl_y;
-			printf("hey\n");
+			if (abs(ray->vr_y / 64) >= 8 && abs(ray->vr_x / 64) >= 8)
+				break ;
+			printf("lo\n");
 			//fflush(NULL);
 		}
-		ray->len_v = 1 / (cos(r_a) / (tan(r_a) * m_x));
-		printf("vy:%d\n", ray->vr_y);
+		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
 	}
-	if (ray->r_a > PI / 2 && ray->r_a <= PI)
+	else if (ray->r_a > PI / 2 && ray->r_a <= PI)
 	{
 		ray->vr_x = ((data->pl_x / 64) * 64);
 		ray->vr_y = -(-tan(r_a) * m_x) + data->pl_y;
-		while (abs(ray->vr_y / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == 'P'))
+		while (abs(ray->vr_y / 64) < 8 && abs(ray->vr_x / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == 'P'))
 		{
 			ray->vr_x -= 64;
 			m_x += 64;
 			ray->vr_y = -(-tan(r_a) * m_x) + data->pl_y;
-			printf("hey\n");
+			if (abs(ray->vr_y / 64) >= 8 && abs(ray->vr_x / 64) >= 8)
+				break;
+			printf("le\n");
 			// fflush(NULL);
 		}
-		ray->len_v = 1 / (cos(r_a) / (tan(r_a) * m_x));
-		printf("vy:%d\n", ray->vr_y);
+		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
+		write(1, "*", 1);
 	}
-	if (ray->r_a >= PI && ray->r_a <= (PI / 2) * 3)
+	else if (ray->r_a > PI && ray->r_a <= (PI / 2) * 3)
 	{
+		write(1, "*", 1);
 		ray->vr_x = ((data->pl_x / 64) * 64);
 		ray->vr_y = (tan(r_a) * m_x) + data->pl_y;
-		while (abs(ray->vr_y / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == 'P'))
+		while (abs(ray->vr_y / 64) < 8 && abs(ray->vr_x / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == 'P'))
 		{
 			ray->vr_x -= 64;
 			m_x += 64;
 			ray->vr_y = (tan(r_a) * m_x) + data->pl_y;
-			printf("hey\n");
+			if (abs(ray->vr_y / 64) >= 8 && abs(ray->vr_x / 64) >= 8)
+				break;
+			printf("la\n");
 			// fflush(NULL);
 		}
-		ray->len_v = 1 / (cos(r_a) / (tan(r_a) * m_x));
-		printf("vy:%d\n", ray->vr_y);
+		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
 	}
-	if (ray->r_a > (PI / 2) * 3)
+	else if (ray->r_a > (PI / 2) * 3)
 	{
 		m_x = 64 - m_x;
 		ray->vr_x = ((data->pl_x / 64) * 64) + 64;
 		ray->vr_y = (-tan(r_a) * m_x) + data->pl_y;
-		while (abs(ray->vr_y / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == 'P'))
+		while (abs(ray->vr_y / 64) < 8 && abs(ray->vr_x / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64)] == 'P'))
 		{
 			ray->vr_x += 64;
 			m_x += 64;
 			ray->vr_y = (-tan(r_a) * m_x) + data->pl_y;
-			printf("hey\n");
+			if (abs(ray->vr_y / 64) >= 8 && abs(ray->vr_x / 64) >= 8)
+				break;
+			printf("lu\n");
 			// fflush(NULL);
 		}
-		ray->len_v = 1 / (cos(r_a) / (tan(r_a) * m_x));
-		printf("vy:%d\n", ray->vr_y);
+		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
 	}
-	draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->vr_x, ray->vr_y, 1);
+	//draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, ray->vr_x, ray->vr_y, 1);
 }
 
 int mv_player(int key, t_mlx *data)
@@ -270,12 +283,12 @@ int mv_player(int key, t_mlx *data)
 	put_map(data);
 	mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->pl_ptr, data->pl_x - 2, data->pl_y - 2);
 
-	data->ray->r_a = data->pl_a;
-	data->ray->r_a = data->pl_a - (PI / 6);
-	vrt_rays(data, data->ray);
-	int id = 1;
+	//data->ray->r_a = data->pl_a;
+	//data->ray->r_a = data->pl_a - (PI / 6);
+	//vrt_rays(data, data->ray);
+	int id = 0;
 //
-	while (id <= 10)
+	while (id <= 30)
 	{
 		data->ray->r_a = data->pl_a - (PI / 6);
 		data->ray->r_a += ((PI / 90) * id);
@@ -283,8 +296,12 @@ int mv_player(int key, t_mlx *data)
 			data->ray->r_a += 2 * PI;
 		if (data->ray->r_a > 2 * PI)
 			data->ray->r_a -= 2 * PI;
-		//hrzn_rays(data, data->ray, id);
+		hrzn_rays(data, data->ray, id);
 		vrt_rays(data, data->ray);
+		if (data->ray->len_v < data->ray->len_h)
+			draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, data->ray->vr_x, data->ray->vr_y, 2);
+		else
+			draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, data->ray->hr_x, data->ray->hr_y, 3);
 		id++;
 	}
 	put_game_bg(data);
