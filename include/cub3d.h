@@ -59,7 +59,12 @@ typedef struct s_mlx
 	void *img_ptr;
 	void *s_img_ptr;
 	void *n_img_ptr;
-	void *n_s_img_ptr;
+	void *w_img_ptr;
+	void *e_img_ptr;
+	void *ns_img_ptr;
+	void *nn_img_ptr;
+	void *nw_img_ptr;
+	void *ne_img_ptr;
 	void *path_ptr;
 	void *wall_ptr;
 	int		pl_x;

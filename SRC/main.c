@@ -6,7 +6,7 @@
 /*   By: taybakan <taybakan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/14 19:34:44 by fsoymaz           #+#    #+#             */
-/*   Updated: 2023/11/30 00:14:02 by taybakan         ###   ########.fr       */
+/*   Updated: 2023/12/01 02:40:41 by taybakan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,9 @@ int draw_line(void *mlx_ptr, void *win_ptr, int x0, int y0, int x1, int y1, int 
 		if (f == 1)
 			mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0xFFFFFF);
 		if (f == 2)
-			mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0xFF0000);
+			mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0x66FF0000);
 		if (f == 3)
-			mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0xFF00FF);
+			mlx_pixel_put(mlx_ptr, win_ptr, x0, y0, 0x660000FF);
 		c++;
 		if (x0 == x1 && y0 == y1)
 		{
@@ -50,21 +50,78 @@ int draw_line(void *mlx_ptr, void *win_ptr, int x0, int y0, int x1, int y1, int 
 	return c;
 }
 
-// void	draw_rays(t_mlx *data, )
-//{
-//	int end_x;
-//	int end_y;
-//
-//	for (int i = data->pl_a; i < (data->pl_a + 60); i += 2)
-//	{
-//		double angle = i * 6.28319 / 360;
-//		int line_length = 500;
-//		end_x = data->pl_x + line_length * cos(angle);
-//		end_y = data->pl_y + line_length * sin(angle);
-//
-//		draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, end_x, end_y);
-//	}
-// }
+ void resize_image(void *original_img_ptr, void *smaller_img_ptr, int reduction_factor, int original_width, int original_height)
+{
+	int *original_data;
+	int *smaller_data;
+	int original_bits_per_pixel;
+	int original_size_line;
+	int original_endian;
+	int smaller_bits_per_pixel;
+	int smaller_size_line;
+	int smaller_endian;
+
+	original_data = (int *)mlx_get_data_addr(original_img_ptr, &original_bits_per_pixel, &original_size_line, &original_endian);
+	smaller_data = (int *)mlx_get_data_addr(smaller_img_ptr, &smaller_bits_per_pixel, &smaller_size_line, &smaller_endian);
+
+	for (int y = 0; y < original_height; y += reduction_factor)
+	{
+		for (int x = 0; x < original_width; x += reduction_factor)
+		{
+			int original_pixel_index = (y * original_size_line / 4) + x;
+
+			int smaller_x = x / reduction_factor;
+			int smaller_y = y / reduction_factor;
+			int smaller_pixel_index = (smaller_y * smaller_size_line / 4) + smaller_x;
+
+			smaller_data[smaller_pixel_index] = original_data[original_pixel_index];
+		}
+	}
+}
+
+void	draw_walls(t_mlx *data, t_ray *ray)
+{
+	int *original_data;
+	int original_bits_per_pixel;
+	int original_size_line;
+	int original_endian;
+	float len;
+	float lineH;
+	float lineO;
+	int	i;
+
+	if (ray->len_h < ray->len_v)
+		len = ray->len_h;
+	else
+		len = ray->len_v;
+	lineH = (64 * 512) / len;
+	if (lineH > 512)
+		lineH = 512;
+	lineO = 256 - lineH / 2;
+	resize_image(data->w_img_ptr, data->nw_img_ptr, 1000 / lineH, 1000, 1000);
+	original_data = (int *)mlx_get_data_addr(data->nw_img_ptr, &original_bits_per_pixel, &original_size_line, &original_endian);
+	original_size_line = lineO;
+	i = 1024;
+	while (i > 512)
+	{
+		i = i - lineO;
+		mlx_put_image_to_window(data->mlx_ptr, data->win_ptr, data->nw_img_ptr, i, lineH);
+	}
+	
+}
+
+void	init_images(t_mlx *data)
+{
+	int	width;
+	int	length;
+
+	width = 1000;
+	length = 1000;
+	data->n_img_ptr = mlx_xpm_file_to_image(data->mlx_ptr, "./textures/a.xpm", &width, &length);
+	data->s_img_ptr = mlx_xpm_file_to_image(data->mlx_ptr, "./textures/b.xpm", &width, &length);
+	data->w_img_ptr = mlx_xpm_file_to_image(data->mlx_ptr, "./textures/c.xpm", &width, &length);
+	data->e_img_ptr = mlx_xpm_file_to_image(data->mlx_ptr, "./textures/d.xpm", &width, &length);
+}
 
 void ff_r(t_mlx *data, t_ray *ray)
 {
@@ -94,9 +151,12 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 	ray->id = id;
 	double r_a = ray->r_a - (PI / 2);
 	int m_y = data->pl_y % 64;
-	if (ray->r_a == 0 || ray->r_a == PI)
+	if ((ray->r_a <= 0 - PI / 2 - 0.025 && ray->r_a >= (2 * PI) - (PI / 2) - 0.025) || (ray->r_a >= PI - (PI / 2) - 0.025 && ray->r_a <= PI - (PI / 2) + 0.025))
+	{
+		ray->len_h = 9999;
 		return;
-	if (ray->r_a < PI / 2)
+		}
+	if (ray->r_a <= PI / 2)
 	{
 		ray->hr_y = (data->pl_y / 64) * 64;
 		ray->hr_x = (-tan(r_a) * m_y) + data->pl_x;
@@ -106,8 +166,8 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = (-tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = fabs(1 / (cos(r_a) / (data->pl_y - ray->hr_y)));
-		printf("len:%f\n", ray->len_h);
+		ray->len_h = (ray->hr_x - data->pl_x) / cos (ray->r_a);
+		printf("bizimlen:%f\n", ray->len_h);
 	}
 	if (ray->r_a > PI / 2 && ray->r_a <= PI)
 	{
@@ -119,8 +179,9 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = -(tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = fabs(1 / (cos(r_a) / (data->pl_y - ray->hr_y)));
-		printf("len:%f\n", ray->len_h);
+		ray->len_h = (data->pl_x - ray->hr_x) / cos(PI - ray->r_a);
+		printf("rayx = %d , rayy = %d**\n", ray->hr_x, ray->hr_y);
+		printf("**len:%f\n", ray->len_h);
 	}
 	if (ray->r_a >= PI && ray->r_a <= (PI / 2) * 3)
 	{
@@ -133,7 +194,7 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = -(-tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = fabs(-1 / (cos(r_a) / (data->pl_y % 64)));
+		ray->len_h = (data->pl_x - ray->hr_x) / cos(ray->r_a - PI);
 		printf("len:%f\n", ray->len_h);
 	}
 	if (ray->r_a > (PI / 2) * 3)
@@ -147,7 +208,7 @@ void hrzn_rays(t_mlx *data, t_ray *ray, int id)
 			m_y += 64;
 			ray->hr_x = (tan(r_a) * m_y) + data->pl_x;
 		}
-		ray->len_h = fabs(-1 / (cos(r_a) / (data->pl_y % 64)));
+		ray->len_h = (ray->hr_x - data->pl_x) / cos((2 * PI) - ray->r_a);
 		printf("len:%f\n", ray->len_h);
 	}
 	//if (ray->id == 1 || ray->id == 30)
@@ -183,7 +244,7 @@ void vrt_rays(t_mlx *data, t_ray *ray)
 			printf("lo\n");
 			//fflush(NULL);
 		}
-		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		ray->len_v = (ray->vr_x - data->pl_x) / cos(ray->r_a);
 		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
 	}
@@ -201,14 +262,12 @@ void vrt_rays(t_mlx *data, t_ray *ray)
 			printf("le\n");
 			// fflush(NULL);
 		}
-		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		ray->len_v = (data->pl_x - ray->vr_x) / cos(PI - ray->r_a);
 		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
-		write(1, "*", 1);
 	}
 	else if (ray->r_a > PI && ray->r_a <= (PI / 2) * 3)
 	{
-		write(1, "*", 1);
 		ray->vr_x = ((data->pl_x / 64) * 64);
 		ray->vr_y = (tan(r_a) * m_x) + data->pl_y;
 		while (abs(ray->vr_y / 64) < 8 && abs(ray->vr_x / 64) < 8 && (data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == '0' || data->map[(ray->vr_y / 64)][(ray->vr_x / 64) - 1] == 'P'))
@@ -221,7 +280,7 @@ void vrt_rays(t_mlx *data, t_ray *ray)
 			printf("la\n");
 			// fflush(NULL);
 		}
-		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		ray->len_v = (data->pl_x - ray->vr_x) / cos(ray->r_a - PI);
 		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
 	}
@@ -240,7 +299,7 @@ void vrt_rays(t_mlx *data, t_ray *ray)
 			printf("lu\n");
 			// fflush(NULL);
 		}
-		ray->len_v = fabs(1 / (cos(r_a) / (tan(r_a) * m_x)));
+		ray->len_v = (ray->vr_x - data->pl_x) / cos((2 * PI) - ray->r_a);
 		printf("vy:%d\n", abs(ray->vr_y));
 		printf("len:%f\n", ray->len_v);
 	}
@@ -288,6 +347,7 @@ int mv_player(int key, t_mlx *data)
 	//vrt_rays(data, data->ray);
 	int id = 0;
 //
+	init_images(data);
 	while (id <= 30)
 	{
 		data->ray->r_a = data->pl_a - (PI / 6);
@@ -298,10 +358,11 @@ int mv_player(int key, t_mlx *data)
 			data->ray->r_a -= 2 * PI;
 		hrzn_rays(data, data->ray, id);
 		vrt_rays(data, data->ray);
-		if (data->ray->len_v < data->ray->len_h)
+		if (data->ray->len_v <= data->ray->len_h)
 			draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, data->ray->vr_x, data->ray->vr_y, 2);
 		else
 			draw_line(data->mlx_ptr, data->win_ptr, data->pl_x, data->pl_y, data->ray->hr_x, data->ray->hr_y, 3);
+		draw_walls(data, data->ray);
 		id++;
 	}
 	put_game_bg(data);
