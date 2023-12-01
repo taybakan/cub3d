@@ -69,6 +69,7 @@ typedef struct s_mlx
 	void *wall_ptr;
 	int		pl_x;
 	int 	pl_y;
+	int		i;
 	float	pl_dx;
 	float	pl_dy;
 	float	pl_a;

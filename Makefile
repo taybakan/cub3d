@@ -7,7 +7,7 @@ GNL_OBJS = $(GNL_SRCS:.c=.o)
 LIBFT_SRC = ./include/libft/libft.a
 LIBFT_OBJS = $(LIBFT_SRC:.=.o)
 MLX = ./include/mlx/libmlx.a
-CFLAGS = -Wall -Wextra -Werror -g #-fsanitize=address
+CFLAGS = -Wall -Wextra -Werror #-fsanitize=address
 LFLAGS = -framework OpenGL -framework AppKit -L./include/mlx -lmlx
 
 CC=gcc
